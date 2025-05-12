@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Gross to Net Salary Calculator</title>
+</head>
+<body>
+    <h1>Gross to Net Salary Calculator</h1>
+
+    <label>Họ và tên: </label>
+    <input type="text" id="nameInput" placeholder="Nhập tên người dùng" required><br><br>
+
+    <label>Gross salary: </label>
+    <input type="number" id="grossInput" placeholder="Nhập gross salary">
+    <button onclick="calculate()">Calculate</button>
+
+    <p><strong>Gross:</strong> <span id="grossVal">undefined</span></p>
+    <p>BHXH (8%): <span id="bhxhVal">undefined</span></p>
+    <p>BHYT (1.5%): <span id="bhytVal">undefined</span></p>
+    <p>BHTN (1%): <span id="bhtnVal">undefined</span></p>
+    <p><strong>Insurance total:</strong> <span id="insuranceVal">undefined</span></p>
+    <p>Tax: <span id="taxVal">undefined</span></p>
+    <p><strong>Net salary:</strong> <span id="netVal">undefined</span></p>
+
+    <hr />
+    <h2>Upload Excel và tải về file kết quả</h2>
+    <form id="uploadForm">
+        <input type="file" id="fileInput" accept=".xlsx" required />
+        <button type="submit">Upload & Download</button>
+    </form>
+
+<script>
+function calculate() {
+    const gross = parseFloat(document.getElementById("grossInput").value || "0");
+    const bhxh = gross * 0.08;
+    const bhyt = gross * 0.015;
+    const bhtn = gross * 0.01;
+    const insurance = bhxh + bhyt + bhtn;
+    const tax = gross >= 11000000 ? gross * 0.1 : 0;
+    const net = gross - insurance - tax;
+
+    document.getElementById("grossVal").textContent = gross.toFixed(2);
+    document.getElementById("bhxhVal").textContent = bhxh.toFixed(2);
+    document.getElementById("bhytVal").textContent = bhyt.toFixed(2);
+    document.getElementById("bhtnVal").textContent = bhtn.toFixed(2);
+    document.getElementById("insuranceVal").textContent = insurance.toFixed(2);
+    document.getElementById("taxVal").textContent = tax.toFixed(2);
+    document.getElementById("netVal").textContent = net.toFixed(2);
+}
+
+document.getElementById("uploadForm").addEventListener("submit", async function(e) {
+    e.preventDefault();
+    const fileInput = document.getElementById("fileInput");
+    const ten = document.getElementById("nameInput").value || "Chưa nhập";
+    const gross = parseFloat(document.getElementById("grossInput").value || "0");
+    const bhxh = gross * 0.08;
+    const bhyt = gross * 0.015;
+    const bhtn = gross * 0.01;
+    const insurance = bhxh + bhyt + bhtn;
+    const tax = gross >= 11000000 ? gross * 0.1 : 0;
+    const net = gross - insurance - tax;
+
+    const formData = new FormData();
+    formData.append("file", fileInput.files[0]);
+    formData.append("ten", ten);
+    formData.append("luong", gross);
+    formData.append("thuong", 0);
+    formData.append("tong", net);
+
+    const response = await fetch("/api/upload-excel/", {
+        method: "POST",
+        body: formData
+    });
+
+    if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "ketqua.xlsx";
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+    } else {
+        alert("Lỗi khi xử lý file Excel!");
+    }
+});
+</script>
+</body>
+</html>
